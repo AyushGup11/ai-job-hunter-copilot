@@ -1,9 +1,10 @@
 import streamlit as st
-from utils import extract_text_from_pdf, analyze_resume
+from utils import extract_text_from_pdf, extract_skills, compare_skills, generate_suggestions, generate_resume_bullets, generate_cover_letter
 
-st.set_page_config(page_title="AI Job Copilot", layout="wide")
+st.set_page_config(page_title="AI Job Copilot", layout="centered")
 
 st.title("🚀 AI Job Hunter Copilot")
+st.write("Analyze your resume against a job description")
 
 #Upload Resume
 uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
@@ -18,12 +19,66 @@ if st.button("Analyze"):
             #Extract resume text
             resume_text = extract_text_from_pdf(uploaded_file)
 
-            #Analyze
-            result = analyze_resume(resume_text, job_desc)
+            #Extract Skills
+            resume_skills = extract_skills(resume_text)
+            jd_skills = extract_skills(job_desc)
 
-        st.subheader("📊 Analysis Result")
-        st.write(result)
+            #Compare
+            matched, missing, score = compare_skills(resume_skills, jd_skills)
+
+            #Suggestions
+            suggestions = generate_suggestions(missing)
+
+            #Bullet Points
+            bullets = generate_resume_bullets(resume_text, job_desc)
+
+            # #Analyzex
+            # result = analyze_resume(resume_text, job_desc)
+
+        # st.subheader("📊 Analysis Result")
+        # st.write(result)
+
+        st.success("Analysis Complete ✅")
+
+        #Display Results
+        st.subheader(f"📊 Match Score: {score}%")
+
+        st.subheader("✅ Matched Skills")
+        st.write(matched if matched else "None")
+
+        st.subheader("❌ Missing Skills")
+        st.write(missing if missing else "None")
+
+        st.subheader("💡 Suggestions")
+        st.write(suggestions)
+
+        st.subheader("📝 Tailored Resume Bullets")
+        st.write(bullets)
 
     else:
         st.warning("Please upload resume and add job description")
 
+if st.button("Generate Cover Letter"):
+    if uploaded_file and job_desc:
+        with st.spinner("Generating Cover Letter..."):
+            resume_text = extract_text_from_pdf(uploaded_file)
+            cover_letter = generate_cover_letter(uploaded_file, job_desc)
+
+        st.subheader("📄 Cover Letter")
+        st.write(cover_letter)
+
+        st.download_button(
+            label = "Download Cover Letter",
+            data = cover_letter,
+            file_name = "cover_letter.pdf"
+        )
+    else:
+        st.warning("Please upload resume and add job description")
+
+
+
+
+#Add it
+#🔗 Job link parser
+#📄 Cover letter generator 
+# improve accuracy
