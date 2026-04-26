@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import extract_text_from_pdf, extract_skills, compare_skills, generate_suggestions, generate_resume_bullets, generate_cover_letter
+from utils import extract_text_from_pdf, extract_skills, compare_skills, generate_suggestions, generate_resume_bullets, generate_cover_letter, extract_job_from_url
 
 st.set_page_config(page_title="AI Job Copilot", layout="centered")
 
@@ -12,12 +12,22 @@ uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
 #Job Description
 job_desc = st.text_area("Paste Job Description/Requirements")
 
+#Job Url
+job_url = st.text_input("Paste Job Link (Optional)")
+
 if st.button("Analyze"):
-    if uploaded_file and job_desc:
+    if uploaded_file and (job_desc or job_url):
+
         with st.spinner("Analyzing..."):
 
             #Extract resume text
             resume_text = extract_text_from_pdf(uploaded_file)
+
+            if job_url:
+                job_desc = extract_job_from_url(job_url)
+
+                if "⚠️" in job_desc:
+                    st.warning(job_desc)
 
             #Extract Skills
             resume_skills = extract_skills(resume_text)
@@ -42,6 +52,9 @@ if st.button("Analyze"):
 
         #Display Results
         st.subheader(f"📊 Match Score: {score}%")
+
+        st.subheader("📄 Extracted Job Description")
+        st.write(job_desc[:1000])
 
         st.subheader("✅ Matched Skills")
         st.write(matched if matched else "None")
@@ -79,6 +92,5 @@ if st.button("Generate Cover Letter"):
 
 
 #Add it
-#🔗 Job link parser
-#📄 Cover letter generator 
+#Improve extracted JD cleaning + relevance filtering
 # improve accuracy

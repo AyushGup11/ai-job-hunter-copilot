@@ -3,6 +3,8 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
 from dotenv import load_dotenv
 import os
+import requests
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -140,7 +142,30 @@ def generate_cover_letter(resume_text, job_desc):
 
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content
- 
+
+def extract_job_from_url(url):
+    try:
+        # ❗ Detect LinkedIn
+        if "linkedin.com" in url:
+            return"⚠️ LinkedIn blocks automatic extraction. Please copy-paste the job description."
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+        response =  requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        #Get all text from page
+        text = soup.get_text(seperator="\n")
+
+        # Clean Text
+        lines = [line.strip() for line in text.split("/n") if line.strip()]
+        job_desc = "\n".join(lines[:300])  #limit size
+
+        return job_desc
+    
+    except Exception as e:
+        return f"Error fetching job description: {str(e)}"
 
 # # Analyse resume vs job description using Groq
 # def analyze_resume(resume_text, job_desc):

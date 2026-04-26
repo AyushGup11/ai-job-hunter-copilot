@@ -4,3 +4,5 @@ langchain
 faiss-cpu
 langchain-groq
 python-dotenv
+requests
+beautifulsoup4
