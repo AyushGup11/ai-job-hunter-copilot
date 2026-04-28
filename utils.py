@@ -156,7 +156,7 @@ def extract_job_from_url(url):
         soup = BeautifulSoup(response.text, "html.parser")
 
         #Get all text from page
-        text = soup.get_text(seperator="\n")
+        text = soup.get_text(separator="\n")
 
         # Clean Text
         lines = [line.strip() for line in text.split("/n") if line.strip()]
@@ -166,6 +166,40 @@ def extract_job_from_url(url):
     
     except Exception as e:
         return f"Error fetching job description: {str(e)}"
+    
+def rewrite_resume(resume_text, job_desc):
+
+    llm = ChatGroq(
+        model_name = "llama-3.3-70b-versatile",
+        temperature = 0.4 
+    )
+
+    prompt = f"""
+    You are an expert resume reviewer and ATS optimization assistant.
+
+    Task:
+    Rewrite the given resume to make it more ATS-friendly and better aligned with the job description.
+
+    Rules:
+    - Improve clarity and professionalism
+    - Add relevant keywords from job description
+    - Keep truthfulness (do NOT invent fake experience)
+    - Make bullet points strong and action-oriented
+    - Optimize for AI/ATS systems
+
+    Resume:
+    {resume_text}
+
+    job_description:
+    {job_desc}
+
+    Return:
+    1. Improved Resume
+    2. Key improvements made (short bullet points)
+    """
+
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return response.content 
 
 # # Analyse resume vs job description using Groq
 # def analyze_resume(resume_text, job_desc):

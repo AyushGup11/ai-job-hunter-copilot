@@ -1,109 +1,110 @@
-# 🤖 AI Job Hunter Copilot
+# 🚀 AI Job Hunter Copilot
 
-## 🚀 Overview
-AI Job Hunter Copilot is a smart AI-powered assistant that helps you streamline your job application process. It analyzes job descriptions, compares them with your resume, and provides personalized suggestions to improve your chances of getting shortlisted.
-
-This tool is especially useful for roles in AI, Data Science, and Software Engineering.
+An AI-powered Streamlit application that helps you **analyze resumes, match skills with job descriptions, generate cover letters, and rewrite resumes for ATS optimization** using Groq LLM (LLaMA 3).
 
 ---
 
-## ✨ Features
-- 🔍 Job Description Analysis
-- 🧠 AI-Powered Resume Matching
-- 📄 Resume Improvement Suggestions
-- ✉️ Automatic Cover Letter Generation
-- 💡 Skill Gap Identification
-- ⚡ Interactive UI using Streamlit
+## 📌 Overview
+
+AI Job Hunter Copilot is a smart career assistant that automates the job application process. It helps users:
+
+- 📊 Analyze resume vs job description
+- 🎯 Match and compare skills
+- 💡 Identify missing skills with suggestions
+- 📝 Generate tailored resume bullet points
+- 📄 Create professional cover letters
+- ✨ Rewrite resumes for ATS optimization
 
 ---
 
-## 🛠️ Tech Stack
-- Frontend: Streamlit
-- Backend: Python
-- AI/LLM: Groq / LLaMA / LangChain
-- Document Processing: PyPDF
-- Vector Database (optional): FAISS / ChromaDB
+## 📸 Screenshots
+
+### 🏠 Home Page / Resume Upload
+![Home](screenshots/home.png)
+
+### 📊 Resume Analysis
+![Analysis](screenshots/analysis.png)
+
+### 📝 Cover Letter Generator
+![Cover Letter](screenshots/cover_letter.png)
+
+### ✨ Resume Rewriter (ATS Optimized)
+![Rewriter](screenshots/rewriter.png)
 
 ---
 
-## 📂 Project Structure
-```
-AI-Job-Hunter-Copilot/
-│── app.py
-│── utils.py
-│── models/
-│── data/
-│── requirements.txt
-│── README.md
-```
+## ⚙️ Features
+
+### 📊 Resume Analysis
+- Extracts text from PDF resume
+- Extracts technical skills using LLM
+- Compares resume skills with job description
+- Calculates match score (%)
+- Displays matched and missing skills
+
+### 📝 Cover Letter Generator
+- Generates personalized cover letters
+- Tailored to resume + job description
+- Professional 200–300 word format
+- Downloadable output
+
+### ✨ Resume Rewriter (ATS Optimizer)
+- Improves resume structure and clarity
+- Adds relevant keywords from job description
+- Makes resume ATS-friendly
+- Ensures no fake experience is added
+
+### 💡 Smart Suggestions
+- Suggests skills to learn
+- Provides improvement roadmap based on missing skills
 
 ---
 
-## ⚙️ Setup Instructions
+## 🧠 Tech Stack
 
-### 1. Clone Repository
+- Python 🐍
+- Streamlit 🎈
+- Groq API (LLaMA 3.3 70B) 🤖
+- PyPDF 📄
+- BeautifulSoup + Requests 🌐
+- LangChain 🔗
+- dotenv 🔐
+
+---
+
+## 📁 Project Structure
+AI Job Hunter Copilot/
+│
+├── app.py # Streamlit frontend
+├── utils.py # Core AI + processing logic
+├── .env # API keys (GROQ_API_KEY)
+└── requirements.txt # Dependencies
+
+
+---
+
+## 🚀 Installation & Setup
+
+### 1️⃣ Clone Repository
 ```bash
 git clone https://github.com/AyushGup11/ai-job-hunter-copilot.git
 cd ai-job-hunter-copilot
-```
 
-### 2. Create Virtual Environment
-```bash
+2️⃣ Create Virtual Environment
+
 python -m venv venv
 venv\Scripts\activate   # Windows
-source venv/bin/activate  # Mac/Linux
-```
 
-### 3. Install Dependencies
-```bash
+3️⃣ Install Dependencies
+
 pip install -r requirements.txt
-```
 
-### 4. Add API Key
-Create a `.env` file and add:
-```
+4️⃣ Setup API Key
+
+Create a .env file:
+
 GROQ_API_KEY=your_api_key_here
-```
 
-### 5. Run the App
-```bash
+5️⃣ Run Application
+
 streamlit run app.py
-```
-
----
-
-## 🧑‍💻 How It Works
-1. Upload your resume (PDF)
-2. Paste the job description
-3. AI analyzes both
-4. Get:
-   - Match Score
-   - Resume Suggestions
-   - Cover Letter
-   - Skill Gap Insights
-
----
-
-## 📌 Use Cases
-- Students applying for internships
-- Job seekers targeting specific roles
-- Resume optimization for ATS
-- AI/ML project demonstration
-
----
-
-## 🔮 Future Improvements
-- LinkedIn job integration
-- Job match scoring dashboard
-- Multi-resume support
-- Job alerts system
-
----
-
-## 🤝 Contributing
-Feel free to fork this repository and submit pull requests.
-
----
-
-## 📜 License
-This project is licensed under the MIT License.
