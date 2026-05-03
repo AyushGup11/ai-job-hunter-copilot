@@ -6,3 +6,8 @@ langchain-groq
 python-dotenv
 requests
 beautifulsoup4
+faiss-cpu
+langchain-community
+sentence-transformers
+matplotlib
+langchain-text-splitters

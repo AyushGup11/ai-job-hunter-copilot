@@ -1,5 +1,11 @@
 import streamlit as st
 from utils import extract_text_from_pdf, extract_skills, compare_skills, generate_suggestions, generate_resume_bullets, generate_cover_letter, extract_job_from_url, rewrite_resume
+from vector_store import create_vector_store, retrieve_context
+import matplotlib.pyplot as plt
+import numpy as np
+@st.cache_resource
+def load_vector_db():
+    return create_vector_store()
 
 st.set_page_config(page_title="AI Job Copilot", layout="centered")
 
@@ -35,24 +41,35 @@ with tab1:
             #Extract resume text
                 resume_text = extract_text_from_pdf(uploaded_file)
 
+                # 🌐 Extract job from URL if provided
+                final_job_desc = job_desc
                 if job_url:
-                    job_desc = extract_job_from_url(job_url)
+                    extracted = extract_job_from_url(job_url)
 
-                    if "⚠️" in job_desc:
-                        st.warning(job_desc)
+                    if "⚠️" in extracted:
+                        st.warning(extracted)
+                    else:
+                        final_job_desc = extracted
 
                     #Extract Skills
                 resume_skills = extract_skills(resume_text)
-                jd_skills = extract_skills(job_desc)
+                jd_skills = extract_skills(final_job_desc[:3000])
+
+                # 🔥 Load vector DB (cached)
+                vector_db = load_vector_db()
 
                     #Compare
-                matched, missing, score = compare_skills(resume_skills, jd_skills)
+                matched, missing, score, insights = compare_skills(
+                    resume_skills,
+                    jd_skills, 
+                    vector_db
+                )
 
                     #Suggestions
                 suggestions = generate_suggestions(missing)
 
                     #Bullet Points
-                bullets = generate_resume_bullets(resume_text, job_desc)
+                bullets = generate_resume_bullets(resume_text, final_job_desc)
 
                     # #Analyzex
                     # result = analyze_resume(resume_text, job_desc)
@@ -62,23 +79,51 @@ with tab1:
 
                 st.success("Analysis Complete ✅")
 
-                    #Display Results
-                st.subheader(f"📊 Match Score: {score}%")
+                # 📊 Score
+                st.markdown("### 📊 Match Score")
+                st.progress(score / 100)
+                st.metric(label="Match %", value=f"{score}%")
 
-                st.subheader("📄 Extracted Job Description")
-                st.write(job_desc[:1000])
+                # 📄 Job Description Preview
+                st.markdown("### 📄 Job Description")
+                st.write(final_job_desc[:800])
 
-                st.subheader("✅ Matched Skills")
-                st.write(matched if matched else "None")
+                #Tabs inside tab (🔥 UI upgrade)
+                subtab1, subtab2, subtab3 = st.tabs(["✅ Skills", "🧠 Insights", "💡 Suggestions"])
 
-                st.subheader("❌ Missing Skills")
-                st.write(missing if missing else "None")
+                with subtab1:
+                    st.markdown("### ✅ Matched Skills")
+                    st.write(matched if matched else "None")
 
-                st.subheader("💡 Suggestions")
-                st.write(suggestions)
+                    st.markdown("### ❌ Missing Skills")
+                    for skill in missing:
+                        st.write(f"- {skill}")
 
-                st.subheader("📝 Tailored Resume Bullets")
-                st.write(bullets)
+                    # 📊 Skill Gap Visualization
+                    st.markdown("### 📊 Skill Gap Visualization")
+
+                    all_skills = sorted(list(set(resume_skills + jd_skills)))[:20]
+                    values = [1 if skill in resume_skills else 0 for skill in all_skills]
+
+                    fig, ax = plt.subplots()
+
+                    labels = [skill[:15] + "..." if len(skill) > 15 else skill for skill in all_skills]
+
+                    ax.barh(labels, values)
+
+                    ax.set_xlabel("Presence (1 = Have, 0 = Missing)")
+                    ax.set_title("Skill Gap")
+
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    
+                with subtab2:
+                    st.markdown("### 🧠 AI Insights")
+                    st.write(insights)
+
+                with subtab3:
+                    st.markdown("### 📝 Tailored Resume Bullets")
+                    st.write(bullets)
 
         else:
             st.warning("Please upload resume and add job description")
@@ -93,7 +138,7 @@ with tab2:
         if uploaded_file and job_desc:
             with st.spinner("Generating Cover Letter..."):
                 resume_text = extract_text_from_pdf(uploaded_file)
-                cover_letter = generate_cover_letter(uploaded_file, job_desc)
+                cover_letter = generate_cover_letter(resume_text, job_desc)
 
             st.subheader("📄 Cover Letter")
             st.write(cover_letter)
@@ -115,7 +160,8 @@ with tab3:
     if st.button("✨ Rewrite Resume"):
         if uploaded_file and job_desc:
             with st.spinner("Improving your resume...."):
-                new_resume = rewrite_resume(uploaded_file, job_desc)
+                resume_text = extract_text_from_pdf(uploaded_file)
+                new_resume = rewrite_resume(resume_text, job_desc) 
 
             st.subheader("📄 Improved Resume")
             st.write(new_resume)
@@ -127,6 +173,9 @@ with tab3:
             )
         else:
             st.warning("Please provide both resume and job description")
+
+
+
 
 # improve accuracy
 

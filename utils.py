@@ -5,10 +5,35 @@ from dotenv import load_dotenv
 import os
 import requests
 from bs4 import BeautifulSoup
+from vector_store import create_vector_store, retrieve_context 
 
 load_dotenv()
 
 groq_api_key=os.getenv("GROQ_API_KEY")
+
+# 🔄 Skill normalization
+SKILL_SYNONYMS = {
+    "py": "python",
+    "python3": "python",
+    "fast api": "fastapi",
+    "llms": "llm",
+    "rag pipelines": "rag",
+    "gen ai": "generative ai",
+    "ai": "Artificial Intelligence",
+    "ml": "Machine Learning",
+    "apis": "API",
+    "api": "API",
+    "artificial Intelligence": "Artificial Intelligence"
+}
+
+def normalize_skills(skills):
+    normalized = []
+    for skill in skills:
+        skill = skill.lower().strip()
+        skill = SKILL_SYNONYMS.get(skill, skill)
+        normalized.append(skill)
+    return list(set(normalized))
+
 
 # 📄 Extract text from PDF
 def extract_text_from_pdf(file):
@@ -29,14 +54,12 @@ def extract_skills(text):
     prompt = f"""
     Extract ONLY technical skills from the text.
 
-    STRICT RULES:
-    - Return only skills (no explanations)
+    RULES:
+    - Return a comma-separated list
+    - No explanations
+    - Normalize similar terms
+    - Keep tools, frameworks, languages
     - Remove duplicates
-    - Normalize terms (e.g., "RAG pipelines" → "RAG")
-    - Remove brackets, punctuation
-    - Ignore degrees, soft skills, experience, roles
-
-    Return as clean comma-separated list.
 
     TEXT:
     {text}
@@ -44,19 +67,72 @@ def extract_skills(text):
     response = llm.invoke([HumanMessage(content=prompt)])
     skills = response.content.strip()
 
-    return [s.strip().lower() for s in skills.split(",")]
+    skills_list = [s.strip().lower() for s in skills.split(",") if s.strip()]
+
+    return normalize_skills(skills_list)
 
 # ⚖️ Compare skills
-def compare_skills(resume_skills, jd_skills):
+def compare_skills(resume_skills, jd_skills, vector_db):
+
+    llm = ChatGroq(
+        model_name = "llama-3.3-70b-versatile",
+        temperature = 0.2
+    )
+
+    # Normalize 
+    resume_skills = normalize_skills(resume_skills)
+    jd_skills = normalize_skills(jd_skills)
+
     resume_set = set(resume_skills)
     jd_set = set(jd_skills)
 
+    #basic matching
     matched = list(resume_set.intersection(jd_set))
     missing = list(jd_set.difference(resume_set))
 
-    score = int((len(matched) / len(jd_set)) * 100) if jd_set else 0
+    #  🔥 Create Vector DB (you can cache later)
+    vector_db = create_vector_store()
+    
+    # 🔍 Query for retrieval
+    query = f"""
+    Resume Skills: {resume_skills}
+    Job Skills: {jd_skills}
+    Missing Skills: {missing}
+    """
+    # 🧠 REAL RAG context
+    context = retrieve_context(vector_db, query)
 
-    return matched, missing, score
+    # 🤖 LLM reasoning with retrieved knowledge
+    prompt = f"""
+    You are an expert AI career assitant.
+
+    Context:
+    {context}
+
+    Resume Skills:
+    {resume_skills}
+
+    Job Skills:
+    {jd_skills}
+
+    Missing Skills:
+    {missing}
+
+    Task:
+    1. Identify most important missing skills
+    2. Suggest related/alternative skills
+    3. Provide a learning roadmap
+    4. Highlight transferable skills
+
+    Output in clean structured format.
+    """
+
+    insights = llm.invoke([HumanMessage(content=prompt)]).content
+
+    #Score
+    score = int((len(matched) / len(jd_skills)) * 100) if jd_skills else 0
+
+    return matched, missing, score, insights
 
 # 💡 Suggestions
 def generate_suggestions(missing_skills):
